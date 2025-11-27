@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>ShakeCraft v4.9: Sensors Fixed</title>
+    <title>ShakeCraft v5.0: GYRO FIX</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -20,73 +20,47 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; text-align: center;
         }
-        .title { font-family: 'Black Ops One'; font-size: 48px; color: #fff; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .subtitle { font-size: 16px; color: rgba(255,255,255,0.9); max-width: 300px; margin-bottom: 40px; line-height: 1.8; }
+        .title { font-family: 'Black Ops One'; font-size: 48px; color: #fff; margin-bottom: 10px; }
         .btn-start {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border: none; color: white;
-            padding: 18px 50px; font-size: 22px; font-family: 'Black Ops One';
-            border-radius: 50px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            user-select: none; -webkit-tap-highlight-color: transparent;
-            transition: all 0.2s;
+            border: none; color: white; padding: 18px 50px; font-size: 22px; 
+            font-family: 'Black Ops One'; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .btn-start:active { transform: scale(0.95); }
 
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; display: none; flex-direction: column; justify-content: space-between; z-index: 10;
         }
-        .header { 
-            padding: 25px; display: flex; justify-content: space-between; 
-            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 100%);
-        }
+        .header { padding: 25px; display: flex; justify-content: space-between; }
         .stat-box { 
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
-            color: white; padding: 12px 24px; 
-            border-radius: 20px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold;
             display: flex; align-items: center; gap: 10px;
-            font-size: 18px;
         }
 
         .tap-zone {
             position: absolute; top: 0; height: 100%; width: 50%;
-            pointer-events: auto; z-index: 5; opacity: 0; transition: opacity 0.2s;
+            pointer-events: auto; z-index: 5; opacity: 0;
         }
-        .tap-left { left: 0; background: linear-gradient(90deg, rgba(240, 147, 251, 0.2), transparent); }
-        .tap-right { right: 0; background: linear-gradient(-90deg, rgba(245, 87, 108, 0.2), transparent); }
-        .active-zone { opacity: 1; }
-
-        #warning-msg {
-            position: absolute; top: 30%; width: 100%; text-align: center;
-            color: #ffeb3b; font-family: 'Black Ops One'; font-size: 28px;
-            text-shadow: 0 0 15px rgba(255, 235, 59, 0.8); display: none;
-            animation: blink 0.4s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        #shaking-indicator {
-            position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
-            background: rgba(76, 175, 80, 0.8); color: white;
-            padding: 15px 30px; border-radius: 30px;
-            font-family: 'Black Ops One'; font-size: 16px;
-            display: none; pointer-events: none;
-            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
-        }
+        .tap-left { left: 0; background: rgba(255,255,255,0.1); }
+        .tap-right { right: 0; background: rgba(255,255,255,0.1); }
+        .active-zone { opacity: 1; transition: opacity 0.1s; }
 
         #sensor-debug {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
-            background: rgba(0,0,0,0.7); color: #0f0; font-size: 12px;
+            position: absolute; bottom: 10px; left: 10px; right: 10px;
+            background: rgba(0,0,0,0.8); color: #0f0; font-size: 11px;
             padding: 10px; border-radius: 8px; font-family: monospace;
-            display: none; max-height: 100px; overflow: auto; z-index: 5;
+            pointer-events: none; max-height: 150px; overflow: hidden;
         }
 
-        #win-screen {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 99; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
+        /* Кнопка для теста */
+        #manual-shake-btn {
+            pointer-events: auto; background: #ff9800; color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; font-weight: bold;
+            position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%);
+            z-index: 20; opacity: 0.8;
         }
-        #win-screen h1 { color: #f5576c; font-family: 'Black Ops One'; margin: 0 0 20px 0; font-size: 48px; }
-        #final-rank { color: #f093fb; font-family: 'Black Ops One'; font-size: 36px; margin: 10px 0; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -94,12 +68,7 @@
 
     <div id="start-screen">
         <div class="title">SHAKE CRAFT</div>
-        <div style="font-size: 16px; color: rgba(255,255,255,0.95); margin-bottom: 20px;">HEAVY ARC EDITION</div>
-        <div class="subtitle">
-            🏗️ Тряси телефон, чтобы строить<br>
-            ⬅️➡️ Тапай края, чтобы выравнивать<br>
-            🏛️ Создай величественную АРКУ
-        </div>
+        <p style="color: #ddd;">v5.0 GYRO FIX</p>
         <button class="btn-start" id="startBtn">START GAME</button>
     </div>
 
@@ -108,31 +77,23 @@
             <div class="stat-box">🏗️ <span id="floor-cnt">0</span></div>
             <div class="stat-box">💎 <span id="gem-cnt">10</span></div>
         </div>
-        <div id="warning-msg">⚠️ CRITICAL LEAN ⚠️</div>
-        <div id="shaking-indicator">🎯 SAFE: KEEP SHAKING</div>
+        
+        <!-- ТЕСТОВАЯ КНОПКА (если датчики вообще не работают) -->
+        <button id="manual-shake-btn" onclick="manualShake()">TEST SHAKE</button>
     </div>
 
     <div class="tap-zone tap-left" id="z-left"></div>
     <div class="tap-zone tap-right" id="z-right"></div>
 
-    <!-- DEBUG PANEL (убрать потом) -->
-    <div id="sensor-debug">Waiting for sensors...</div>
-
-    <div id="win-screen">
-        <h1>🏛️ ARCH COMPLETED!</h1>
-        <h2 id="final-rank">GOLDEN ARC</h2>
-        <p style="margin: 20px 0; font-size: 18px;">Height: <span id="final-h">0</span> floors</p>
-        <button class="btn-start" onclick="location.reload()" style="padding: 14px 40px; font-size: 18px;">RESTART</button>
-    </div>
+    <div id="sensor-debug">Waiting...</div>
 
     <script>
-        // ===== DEBUG LOG =====
+        // ===== LOGGING =====
         const debugEl = document.getElementById('sensor-debug');
         const logs = [];
-        
         function addLog(msg) {
-            logs.push(new Date().toLocaleTimeString() + ': ' + msg);
-            if (logs.length > 8) logs.shift();
+            logs.push(msg);
+            if (logs.length > 6) logs.shift();
             debugEl.innerText = logs.join('\n');
         }
 
@@ -142,11 +103,9 @@
             gravity: 0.00002,
             gravityAfterShake: 0.000008,
             repairPower: 0.002,
-            shakeSensitivity: 15,
-            criticalBend: 0.35,
-            maxBend: 3.5,
-            fogNear: 2,
-            fogFar: 200
+            shakeThresholdAccel: 15,  // Акселерометр (м/с²)
+            shakeThresholdGyro: 50,   // Гироскоп (градусы/сек)
+            cooldown: 400
         };
 
         const STATE = {
@@ -155,122 +114,40 @@
             bendVelocity: 0,
             currentBend: 0,
             isPlaying: false,
-            isGameOver: false,
             isShakingNow: false,
-            lastShakeTime: 0,
-            shakeCooldown: 500,
-            sensorActive: false
+            lastBuild: 0
         };
 
         // ===== THREE.JS =====
         let scene, camera, renderer;
-
         function initThree() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f7fa);
-            scene.fog = new THREE.Fog(0xf5f7fa, CFG.fogNear, CFG.fogFar);
+            scene.fog = new THREE.Fog(0xf5f7fa, 2, 200);
 
             camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
             camera.position.set(0, 12, 40);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
             document.body.appendChild(renderer.domElement);
 
             const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
             dirLight.position.set(30, 60, 30);
             dirLight.castShadow = true;
-            dirLight.shadow.mapSize.width = 2048;
-            dirLight.shadow.mapSize.height = 2048;
             scene.add(dirLight);
-
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-            const groundGeo = new THREE.PlaneGeometry(300, 300);
-            const groundMat = new THREE.MeshStandardMaterial({ 
-                color: 0xe8e8e8,
-                roughness: 0.8,
-                metalness: 0
-            });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0xe8e8e8 }));
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
-            ground.position.y = -0.1;
             scene.add(ground);
-
-            const skyGeo = new THREE.SphereGeometry(300, 32, 32);
-            const skyMat = new THREE.MeshStandardMaterial({
-                color: 0xb0c4de,
-                emissive: 0xb0c4de,
-                side: THREE.BackSide
-            });
-            const sky = new THREE.Mesh(skyGeo, skyMat);
-            scene.add(sky);
         }
-
-        // ===== AUDIO =====
-        let audioCtx = null;
-
-        function initAudio() {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                addLog('✓ Audio initialized');
-            } catch(e) { 
-                addLog('✗ Audio error: ' + e.message);
-            }
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'build') {
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } else if (type === 'repair') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.linearRampToValueAtTime(700, now + 0.15);
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } else if (type === 'win') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(800, now + 1.5);
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.linearRampToValueAtTime(0, now + 2);
-                osc.start(now);
-                osc.stop(now + 2);
-            }
-        }
-
-        // ===== MATERIALS =====
-        const matBlock = new THREE.MeshStandardMaterial({ 
-            color: 0xf5576c,
-            roughness: 0.6,
-            metalness: 0.1
-        });
-        const matStone = new THREE.MeshStandardMaterial({ 
-            color: 0x667eea,
-            roughness: 0.7,
-            metalness: 0.05
-        });
 
         // ===== GAME LOGIC =====
+        const matBlock = new THREE.MeshStandardMaterial({ color: 0xf5576c });
+        const matStone = new THREE.MeshStandardMaterial({ color: 0x667eea });
 
         function addFloor(isBase = false) {
             const group = new THREE.Group();
@@ -281,7 +158,6 @@
             for (let x = 0; x < size; x++) {
                 for (let z = 0; z < size; z++) {
                     if (!isBase && x > 0 && x < 4 && z > 0 && z < 4) continue;
-
                     const geo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
                     const mesh = new THREE.Mesh(geo, mat);
                     mesh.position.set(x - offset, 0, z - offset);
@@ -290,79 +166,86 @@
                     group.add(mesh);
                 }
             }
-
             STATE.floors.push(group);
             scene.add(group);
-
-            if (!isBase) {
-                STATE.gems++;
-                playSound('build');
-            }
-            updateUI();
+            if (!isBase) STATE.gems++;
+            
+            document.getElementById('floor-cnt').innerText = STATE.floors.length;
+            document.getElementById('gem-cnt').innerText = STATE.gems;
         }
 
-        let lastBuildTime = 0;
-
-        // ===== ДАТЧИКИ АКСЕЛЕРОМЕТРА =====
-        function handleShake(e) {
-            if (!STATE.isPlaying || STATE.isGameOver) return;
-            
-            const acc = e.accelerationIncludingGravity;
-            if (!acc) {
-                addLog('✗ No acceleration data');
-                return;
+        function onShake() {
+            if (Date.now() - STATE.lastBuild > CFG.cooldown) {
+                addLog('>>> SHAKE ACTION! <<<');
+                addFloor();
+                STATE.lastBuild = Date.now();
+                STATE.isShakingNow = true;
+                setTimeout(() => STATE.isShakingNow = false, CFG.cooldown + 200);
+                STATE.bendVelocity += (Math.random() - 0.5) * 0.0002;
             }
+        }
+
+        window.manualShake = function() {
+            addLog('Manual Button Clicked');
+            onShake();
+        };
+
+        // ===== SENSORS (DUAL MODE) =====
+        let lastX=0, lastY=0, lastZ=0;
+        let lastAlpha=0, lastBeta=0, lastGamma=0;
+
+        // 1. ACCELEROMETER (DeviceMotion)
+        function handleMotion(e) {
+            const acc = e.accelerationIncludingGravity;
+            if (!acc) return;
 
             const force = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-            
-            if (force > CFG.shakeSensitivity && Date.now() - lastBuildTime > CFG.shakeCooldown) {
-                addLog(`Shake detected! Force: ${force.toFixed(1)}`);
-                addFloor();
-                lastBuildTime = Date.now();
-                
-                STATE.isShakingNow = true;
-                setTimeout(() => { STATE.isShakingNow = false; }, CFG.shakeCooldown + 200);
-                
-                STATE.bendVelocity += (Math.random() - 0.5) * 0.0002;
-                
-                const indicator = document.getElementById('shaking-indicator');
-                indicator.style.display = 'block';
-                setTimeout(() => { indicator.style.display = 'none'; }, 800);
+            // Просто выводим данные в лог раз в секунду для проверки
+            if (Math.random() < 0.05) addLog(`Accel Force: ${force.toFixed(1)}`);
+
+            if (force > CFG.shakeThresholdAccel) {
+                onShake();
             }
         }
 
-        function repair(dir) {
-            if (STATE.gems <= 0 || STATE.isGameOver) return;
-            STATE.gems--;
-            STATE.bendVelocity += dir * CFG.repairPower;
-            playSound('repair');
-            updateUI();
+        // 2. GYROSCOPE (DeviceOrientation) - Запасной вариант
+        function handleOrientation(e) {
+            // alpha (z), beta (x), gamma (y)
+            if (!e.alpha) return;
 
-            const id = dir === 1 ? 'z-left' : 'z-right';
-            const el = document.getElementById(id);
-            el.classList.add('active-zone');
-            setTimeout(() => el.classList.remove('active-zone'), 150);
+            const dAlpha = Math.abs(e.alpha - lastAlpha);
+            const dBeta = Math.abs(e.beta - lastBeta);
+            const dGamma = Math.abs(e.gamma - lastGamma);
+
+            // Фильтруем скачки через 360 градусов
+            if (dAlpha > 300) return; 
+
+            const rotationSpeed = dAlpha + dBeta + dGamma;
+            
+            if (Math.random() < 0.05) addLog(`Gyro Speed: ${rotationSpeed.toFixed(1)}`);
+
+            if (rotationSpeed > CFG.shakeThresholdGyro) {
+                onShake();
+            }
+
+            lastAlpha = e.alpha;
+            lastBeta = e.beta;
+            lastGamma = e.gamma;
         }
 
+        // ===== PHYSICS LOOP =====
         function updatePhysics() {
-            if (!STATE.isPlaying || STATE.isGameOver) return;
             const h = STATE.floors.length;
             if (h < 2) return;
 
-            let g = CFG.gravity;
-            if (!STATE.isShakingNow) {
-                g = CFG.gravityAfterShake;
-            }
-
+            let g = STATE.isShakingNow ? CFG.gravityAfterShake : CFG.gravity;
             let leverage = h * 0.00005;
+            
             if (STATE.currentBend > 0) STATE.bendVelocity += g * leverage;
-            else if (STATE.currentBend < 0) STATE.bendVelocity -= g * leverage;
-
-            if (Math.abs(STATE.currentBend) < 0.05) STATE.bendVelocity += (Math.random() - 0.5) * 0.00001;
+            else STATE.bendVelocity -= g * leverage;
 
             STATE.bendVelocity *= 0.98;
             STATE.currentBend += STATE.bendVelocity;
-
             STATE.currentBend = Math.max(-0.5, Math.min(0.5, STATE.currentBend));
 
             let accumulatedAngle = 0;
@@ -374,24 +257,12 @@
                 const f = STATE.floors[i];
                 f.position.copy(pos);
                 f.rotation.z = -accumulatedAngle;
-
                 let dir = up.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), -accumulatedAngle);
                 pos.add(dir);
                 accumulatedAngle += bendPerFloor;
             }
 
-            const topPos = STATE.floors[h - 1].position.clone();
-            if (topPos.y < 1.5 && Math.abs(topPos.x) > 8 && Math.abs(STATE.currentBend) > 0.4) {
-                winGame(h);
-            }
-
-            if (!STATE.isShakingNow && Math.abs(bendPerFloor) > CFG.criticalBend) {
-                document.getElementById('warning-msg').style.display = 'block';
-                if (Math.random() < 0.02) collapseTop();
-            } else {
-                document.getElementById('warning-msg').style.display = 'none';
-            }
-
+            const topPos = STATE.floors[h-1].position.clone();
             const midX = topPos.x / 2;
             const midY = topPos.y / 2 + 5;
             const targetZ = 40 + (h * 1.8);
@@ -402,107 +273,43 @@
             camera.lookAt(midX, midY, 0);
         }
 
-        function collapseTop() {
-            if (STATE.floors.length < 2) return;
-            const f = STATE.floors.pop();
-            scene.remove(f);
-            updateUI();
-            STATE.bendVelocity *= 0.7;
-        }
-
-        function winGame(score) {
-            STATE.isGameOver = true;
-            playSound('win');
-            document.getElementById('win-screen').style.display = 'flex';
-            document.getElementById('final-h').innerText = score;
-
-            let r = "WOODEN ARC";
-            if (score > 20) r = "STONE ARC";
-            if (score > 35) r = "GOLDEN ARC";
-            if (score > 50) r = "PLATINUM ARC";
-            document.getElementById('final-rank').innerText = r;
-        }
-
-        function updateUI() {
-            document.getElementById('floor-cnt').innerText = STATE.floors.length;
-            document.getElementById('gem-cnt').innerText = STATE.gems;
-        }
-
-        function gameLoop() {
-            requestAnimationFrame(gameLoop);
+        function loop() {
+            requestAnimationFrame(loop);
             updatePhysics();
             renderer.render(scene, camera);
         }
 
-        // ===== START GAME =====
+        // ===== START =====
         async function startGame() {
-            addLog('Starting game...');
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('ui-layer').style.display = 'flex';
-            debugEl.style.display = 'block'; // Показываем дебаг панель
-
-            initAudio();
-
             STATE.isPlaying = true;
-            STATE.isGameOver = false;
-
             addFloor(true);
 
-            // ===== ЗАПРОС РАЗРЕШЕНИЯ НА ДАТЧИКИ =====
-            try {
-                if (typeof DeviceMotionEvent !== 'undefined') {
-                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                        // iOS 13+
-                        addLog('iOS detected, requesting permission...');
-                        const response = await DeviceMotionEvent.requestPermission();
-                        
-                        if (response === 'granted') {
-                            addLog('✓ Permission GRANTED');
-                            window.addEventListener('devicemotion', handleShake, true);
-                            STATE.sensorActive = true;
-                        } else {
-                            addLog('✗ Permission DENIED');
-                        }
-                    } else {
-                        // Android / старые браузеры
-                        addLog('Android detected, enabling sensors...');
-                        window.addEventListener('devicemotion', handleShake, true);
-                        STATE.sensorActive = true;
-                        addLog('✓ Sensors ENABLED');
+            // Try Sensors
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const resp = await DeviceMotionEvent.requestPermission();
+                    if (resp === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion, true);
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                        addLog('iOS Sensors ON');
                     }
-                } else {
-                    addLog('✗ DeviceMotionEvent not supported');
-                }
-            } catch (err) {
-                addLog('Error: ' + err.message);
+                } catch (e) { addLog('iOS Perm Error'); }
+            } else {
+                window.addEventListener('devicemotion', handleMotion, true);
+                window.addEventListener('deviceorientation', handleOrientation, true);
+                addLog('Android Sensors ON');
             }
 
-            gameLoop();
+            loop();
         }
 
-        // ===== EVENT LISTENERS =====
         document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('z-left').addEventListener('pointerdown', (e) => { e.preventDefault(); STATE.bendVelocity += CFG.repairPower; });
+        document.getElementById('z-right').addEventListener('pointerdown', (e) => { e.preventDefault(); STATE.bendVelocity -= CFG.repairPower; });
 
-        document.getElementById('z-left').addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            repair(1);
-        });
-
-        document.getElementById('z-right').addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            repair(-1);
-        });
-
-        window.addEventListener('resize', () => {
-            if (!camera || !renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // ===== BOOT =====
         initThree();
-        addLog('Game initialized');
 
     </script>
 </body>
